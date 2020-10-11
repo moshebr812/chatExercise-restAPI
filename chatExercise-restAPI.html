@@ -3,17 +3,251 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chat using REST-API</title>
-    <link rel="stylesheet" type="text/css" href="/css/chatExercise-restAPI.css">
-    <link rel="stylesheet" type="text/css" href="public/css/chatExercise-restAPI.css">
+    <title>Chat Exercise - restAPI</title>
+    <!-- <link rel="stylesheet" type="text/css" href="./public/css/chatExercise-restAPI.css"> -->
+    <link rel="stylesheet" type="text/css" href="./css/chatExercise-restAPI.css">
 </head>
 <body>
-    <div>
-        THIS IS MY TEST
-    </div>
+    <div id="divMaincontainer">
+        <div id="divHeader">
+            <h4>Form: submit chat + show chat history</h4>
+            <h4>Using: express / REST.API)</h4>
+        </div>
 
+        <div id="divBody">
+           
+
+           <div id="divLeftSectionContainer">
+
+                <div id="divChatHistoryMainContainer">
+                   <h4 id="headerMessgaHistory">Message History - ###CountMessages### logged</h4>     
+                   <div id="messageHistoryList">
+                        <!-- this text will be replaced by a set of divs, one div for each message "History" -->
+                        ###MessageHistory###
+                        <!-- <div class="oneMessageDiv">AAA</div> --> 
+                    </div>    <!-- END messageHistoryList -->
+                </div>  <!-- END divChatHistoryMainContainer-->
+                
+                <div id="divSubmitChat">
+                    <h4>New Chat<h4>
+                        <form action="/" method="GET" id="formChatSubmit">
+                           <label>Nick Name:
+                               <input type="text" name="nickName">
+                           </label>
+                           <label>Message:
+                               <input type="text" name="message" style="width: 200px;">
+                           </label><br>
+                           <input type="submit" id="submitChat">
+                           <button name="delMessage" id="clearHistory">DelHistory</button>
+                       </form>
+                </div>
+
+                <div id="divChatUsers">
+                    <h4>TBD what to do here</h4>
+                    <ol>
+                        <li>support submit users on left section</li>
+                        <li>use a different background for My messages</li>
+                    </ol>
+                </div>
+            </div>   <!--   END divLeftSectionContainer -->
+            
+             <div id="divRightSectionContainer">
+                <h4>Submit Chat, Show Chat History, Delete History, usinh "express"</h4>
+                <ol>  
+                    <li>node-module "express</li>
+                    <li>if file message-history.json does not exist: create it with []</li>
+                    <li>prevent each message div to extend to full container height-> <strong>height: fit-content</strong></li>
+                    <li>NOTE addEventListener 'submit' is on the form #id, not no input type='submit'</li>
+                </ol>
+            </div>
+        </div>
+ 
+        <div id="divFooter">
+            <h4>Footer</h4>    
+        </div>
+    </div>
+    
     <script>
-        alert ('test');
+        console.log ('DOM Loaded, Script Started');
+        const formChatDetails = document.querySelector('#formChatSubmit');
+        const btnClearHist = document.querySelector('#clearHistory');
+        const defaultURL = 'http://localhost:8080/';
+        const monthNameFormat = 'SHORT';
+        // headerMessgaHistory
+        const headerMessgaHistory = document.querySelector('#headerMessgaHistory');
+        const histDivContainer = document.querySelector('#messageHistoryList');
+        // Debug
+        const debugMode = false;
+
+        formChatDetails.addEventListener ('submit', (event) => {
+            event.preventDefault();
+            submitNewMessage (  formChatDetails.nickName.value,
+                                formChatDetails.message.value );
+        });
+
+        btnClearHist.addEventListener ('click' , (event) => {
+            event.preventDefault();
+            clearHistory();
+        });
+
+        async function submitNewMessage(nickName, message) {
+            // generate an ID based on time
+            const idByDate = Date.now().toString().substring(3); // I take only part of the id so it looks better on the DON
+            const insertTime = getTime();
+            if (debugMode) {console.log (`submitNewMessage() ... start ...Parms: ${nickName} ${message} ${idByDate} ${insertTime}`);}
+            
+            let newMessage = {"nickName": nickName, "message": message, "id": idByDate, "insertTime": insertTime};
+            // call the API that will receieve the new info, add to an array, insert to file, return new UPDATE array
+                // express syntax - without REST.API
+                // const response = await fetch (`${defaultURL}write-chat?nickName=${nickName}&message=${message}&id=${idByDate}&insertTime=${insertTime}`);
+            
+            if (debugMode)  {
+                console.log ( 'newMessage : ' + JSON.stringify(newMessage) );
+            }
+
+            // REST.API - POST - INSERT
+            let insertResponse = await fetch(`${defaultURL}message`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify( newMessage ) // we pass the data as JSON
+            }); // end fetch using PUSH = POST
+            //
+            // the response includes the new Array
+            let newChatArray = await insertResponse.json();
+            
+            if (debugMode)  {
+                console.log ( JSON.stringify(newChatArray) );
+            }    
+
+            loadHistoryToDOM (newChatArray);
+
+            // if we reached here we assume Submit succeeded ==>> clean input fields on ON 
+            formChatDetails.nickName.value = '';
+            formChatDetails.message.value = '';
+        } // END submitNewMessage
+
+        async function clearHistory() {
+            if (debugMode) {console.log (`clearHistory() ... start ... setting method="DELETE" `) }
+            
+            const response = await fetch (`${defaultURL}message` , 
+                                           { method: 'DELETE'}
+                             );
+            let newChatArray = await response.json(); // the response includes the new Array
+            // refresh the History List by sending the empty array
+            if (debugMode) {console.log (`clearHistory() ... calling loadHistoryToDOM() after fecth returned a response `)}
+            loadHistoryToDOM (newChatArray);
+        } // END clearHistory
+
+        function loadHistoryToDOM(histArray) {
+            if (debugMode) {console.log( 'loadHistoryToDOM() - start')};
+
+            // this function is called when ever the chatHistArray is changing:
+                // 1. After new submit
+                // 2. after 1st load
+                // 3. After clear (maybe)
+            
+            // The actual list
+            let msgHistoryContent = '';
+            
+            if (histArray.length) {
+                histArray.forEach( (element, idx) => {
+                    msgHistoryContent += 
+                    `<div class="oneMessageDiv"> 
+                        <strong class="oneMessageStrong">${element.nickName} [${element.id}]:</strong>
+                        <label class="oneMessageTime">At: ${element.insertTime}  </label>
+                        ${element.message}
+                        <button class="oneMessageDelButton" id="idDelOneMessage_${element.id}" 
+                            onclick=delChatByID("${element.id}")>Delete</button>    
+                    </div>`
+
+                    // <button onclick="myFunction()">Click me</button>
+                });
+            } // end if on (histArray.length)
+            // Update main Div with the correct Chat Hist List
+            histDivContainer.innerHTML = msgHistoryContent;
+
+            if (debugMode) {console.log( 'loadHistoryToDOM() - after histDivContainer.innerHTML. before setting counter.')};
+            // Update list header which includes the counter
+            let msg = 'Message History - non logged';
+            if (histArray.length) {
+                // i.e. valid and we have content
+                msg = 'Message History - ' + histArray.length + ' messages logged';
+            } 
+            headerMessgaHistory.innerHTML = msg;
+            if (debugMode) {console.log( 'loadHistoryToDOM() - after headerMessgaHistory.innerHTML. DONE.')};
+        } // END loadHistoryToDOM
+
+        async function delChatByID (buttonID) {
+            console.log (`delChatByID() - delete chatID [${buttonID}]`)
+            
+            // this syntax can be accessed in Server via request.query['id']
+            // const response = await fetch (`${defaultURL}del-single-chat?id=${buttonID}`);
+
+            // this syntax can be accessed in Server via request.parameters.id
+            // method = DELETE, listen on server at myApp.delete() and catch the ID via request.params.id
+
+            const response = await fetch (`${defaultURL}message/${buttonID}` ,
+                    {   method: 'DELETE',
+                        // headers: { 'Content-Type': 'application/json' },
+                        // must pass the data as JSON
+                        // body:    JSON.stringify ( { "id": buttonID} ),
+                    }
+            ); // END fetch
+
+            const arrayAfterDelete = await response.json();
+
+            //load it back to DOM
+            loadHistoryToDOM ( arrayAfterDelete);
+        }
+
+        async function getHistoryList() {
+            if (debugMode) {console.log( 'getHistoryList() - before calling server')};
+            // DO NOT HOLD a global Array of chat hist on DOM. Data is managed by the Server Side
+            const response = await fetch (`${defaultURL}message`);
+            const chatArray = await response.json();
+
+            if (debugMode) {console.log( 'getHistoryList() - after calling server. before calling loadHistoryToDOM')};
+            loadHistoryToDOM ( chatArray );
+        }
+
+        //==========    getTime    ===================
+        function getTime() {
+            let time = new Date();
+            let timeInUIFormat = 
+                dateZeroPrefix (time.getDate().toString(), 2) + '-' +
+                getMonthName (time.getMonth(), monthNameFormat) + '-' + time.getFullYear() + '  ' +
+                dateZeroPrefix ( time.getHours().toString(), 2 ) + ":" + 
+                dateZeroPrefix ( time.getMinutes().toString(), 2)  + ":" + 
+                dateZeroPrefix ( time.getSeconds().toString(), 2 );
+        
+            return timeInUIFormat;
+        } // END getTime()
+
+
+        //==========    getMonthName    ===================
+        function getMonthName (pMonthEnum, pFormat) {
+            monthShortNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+            monthLongNames = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+            if (pFormat==='LONG') {
+                return (monthLongNames[pMonthEnum]);    
+            } else {
+                return (monthShortNames[pMonthEnum]);
+            }
+        } // END getMonthName
+
+        //==========    dateZeroPrefix    ===================
+        function dateZeroPrefix (pOrgString, pRequiredLength) {
+            let prefix = '0';
+            // console.log(pOrgString + '--'+ pRequiredLength);
+            while (pOrgString.length < parseInt(pRequiredLength)) {
+                pOrgString = prefix + pOrgString;
+            }
+            return pOrgString;
+        } // END dateZeroPrefix
+
+        // 1st load
+        getHistoryList();
+        
     </script>
 </body>
 </html>

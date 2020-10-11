@@ -1,0 +1,17 @@
+{
+  "name": "chatexercise-restapi",
+  "version": "1.0.0",
+  "description": "chat exrecise using REST-API",
+  "main": "chatExercise-restAPI.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "Homework"
+  ],
+  "author": "MB 812",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.17.1"
+  }
+}

@@ -1,4 +1,104 @@
+html, body {
+    width: 98%;
+    height: 98%;
+    background-color:lightblue;
+    margin: 0;
+}
+
 div {
-    background-color: yellow;
-    min-height: 100px;;
+    display: flex;
+    flex-direction: column;
+    border: 1px solid darkred;
+    width: 100%;
+    height: 100%;
+    background-color: lightgray;
+}
+
+h4 {
+    padding-left: 10px;
+    margin: 0;
+    margin: 7px 0 3px 0;
+}
+
+/* GENERAL Definitions */
+#divMaincontainer {
+    flex-direction: column;
+    background-color: transparent;
+}
+
+#divHeader, #divFooter {
+    /* Set header to fixedheight */
+    height: 60px;
+    /* the header is an item, center its text */
+    align-items: center;
+    border: none;
+    background-color:#341313;
+    color: lime;
+} 
+
+#divBody {
+    flex: 6;
+    flex-direction: row;
+}
+
+#divLeftSectionContainer, #divRightSectionContainer {
+    flex: 1;
+    flex-direction: column;
+    overflow-y: auto;
+}
+
+#divChatHistoryMainContainer {
+    flex: 6;
+}
+/* the 3 main div in left section "Chat */
+#messageHistoryList {
+    display: flex;
+    flex: 1;
+    overflow-y: scroll;
+    /* justify content will center here verticall : not what I want */
+    /* justify-content: center; */
+}
+
+.oneMessageDiv {
+    position: relative;
+    border:2px dashed darkgreen;
+    background-color: greenyellow;
+    /* background-color: skyblue; */
+    color: black;
+    margin: 5px 10px 0px 10px; 
+    width: 90%;
+    /* width: calc (var(--main-div-width() - 30Px); */
+    padding: 5px;
+    align-self:flex-start;
+    height: min-content;
+ }
+.oneMessageStrong {
+    padding: 5px;
+}
+
+.oneMessageDelButton {
+    color: red;
+    width: 45px;
+    height: 20px;
+    font-size: x-small;
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    border-radius: 10px;
+}
+
+#divSubmitChat {
+    display: flex;
+    flex: 1;
+}
+#divChatUsers {
+    display: flex;;
+    flex: 2;
+}
+
+.oneMessageTime {
+    position: absolute;
+    top: 8px;
+    right: 60px;
+    font-size: 13px;
 }
