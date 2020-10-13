@@ -55,7 +55,12 @@ myApp.get('/message', (request, response) => {
     response.send (chatArray);
 });
 
-// =============================    Read by message ID
+// =============================    Read specific message by chatID
+myApp.get ('/message/:chatID' , (request, response) => {
+    const chatIDToRead = request.params.chatID;
+    console.log(`${sectionSplit}myApp.get('/message/:chatID') ..... view mode chatID = ${chatIDToRead}`);
+    response.send ( chatArray [ chatArray.findIndex(element => element.id == chatIDToRead) ] );
+});
 
 // =============================    Insert message using POST
 myApp.post ('/message', (request, response) => {
@@ -79,6 +84,29 @@ myApp.post ('/message', (request, response) => {
     response.send (chatArray);
 });
 
+// =============================    Update Message Content using PUT
+myApp.put ('/message/:chatID' , (request, response) => {
+    const idToUpdate = request.params.chatID
+    const newComment = request.body.comment;
+    
+    console.log(`${sectionSplit}myApp.put('/message/:chatID')  ..... method=PUT .... for UPDATE`);
+    console.log(`.......chatID=${idToUpdate}  comment=${newComment}`);
+
+    let location = chatArray.findIndex ( element => element.id === idToUpdate);
+    console.log(`...... location of value ${idToUpdate} in the array is ${location}`);
+
+    if (location<0) {
+        console.log (`FAILED TO FIND chat id to EDIt. id=${idToUpdate}`);
+        // Do NOT change the array  "chatArray"
+    } else {
+        chatArray [location].message = chatArray[location].message + ' <br> ' + newComment;
+        fileService.writeFileSync (chatHistoryFile, JSON.stringify ( chatArray) );
+        console.log (`......Adding comment to chat id ${idToUpdate}`);
+    }
+    // return the Array push & write to file
+    response.send (chatArray);
+});
+
 // =============================    DELETE HISTORY using DELETE
 myApp.delete('/message' , (request, response) => {
     console.log(`${sectionSplit}myApp.delete('/message')  ..... method=DELETE .... meaning DELETE`);
@@ -92,6 +120,7 @@ myApp.delete('/message/:id' , (request, response) =>{
 
     console.log(`${sectionSplit}myApp.delete('/message/:id')  ..... method=DELETE .... for specific id ${idToDel}`);
     // [A] - find the ID in the array
+    
     let location = chatArray.findIndex ( element => element.id === idToDel);
     console.log(`...... location of value ${idToDel} in the array is ${location}`);
 

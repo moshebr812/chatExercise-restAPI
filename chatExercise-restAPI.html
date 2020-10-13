@@ -32,7 +32,7 @@
                     <h4>New Chat<h4>
                         <form action="/" method="GET" id="formChatSubmit">
                            <label>Nick Name:
-                               <input type="text" name="nickName">
+                               <input type="text" name="nickName" id="idNickName">
                            </label>
                            <label>Message:
                                <input type="text" name="message" style="width: 200px;">
@@ -79,6 +79,7 @@
         // Debug
         const debugMode = false;
 
+        // Add Event Listener is on the FORM !!!!
         formChatDetails.addEventListener ('submit', (event) => {
             event.preventDefault();
             submitNewMessage (  formChatDetails.nickName.value,
@@ -111,7 +112,7 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify( newMessage ) // we pass the data as JSON
             }); // end fetch using PUSH = POST
-            //
+            
             // the response includes the new Array
             let newChatArray = await insertResponse.json();
             
@@ -157,7 +158,11 @@
                         <label class="oneMessageTime">At: ${element.insertTime}  </label>
                         ${element.message}
                         <button class="oneMessageDelButton" id="idDelOneMessage_${element.id}" 
-                            onclick=delChatByID("${element.id}")>Delete</button>    
+                            onclick=delChatByID("${element.id}") title="Delete this sepcific chat (by ChatID)">Delete</button>    
+                        <button class="oneMessageRoundButton oneMessageViewButton" title="View chat details (by ChatID)"
+                            onClick="viewChatByID(${element.id})">V</button>
+                        <button class="oneMessageRoundButton oneMessageEditButton" title="Add comment to chat message (by ChatID)"
+                            onClick="editChatByID(${element.id})">E</button>
                     </div>`
 
                     // <button onclick="myFunction()">Click me</button>
@@ -184,12 +189,13 @@
             // const response = await fetch (`${defaultURL}del-single-chat?id=${buttonID}`);
 
             // this syntax can be accessed in Server via request.parameters.id
-            // method = DELETE, listen on server at myApp.delete() and catch the ID via request.params.id
+            // const response = await fetch (`${defaultURL}message/${buttonID}` ,
+            // method = DELETE
 
             const response = await fetch (`${defaultURL}message/${buttonID}` ,
                     {   method: 'DELETE',
                         // headers: { 'Content-Type': 'application/json' },
-                        // must pass the data as JSON
+                        // if i meeded to pass more parameters for the delete "where statement" ==>> use body
                         // body:    JSON.stringify ( { "id": buttonID} ),
                     }
             ); // END fetch
@@ -199,6 +205,42 @@
             //load it back to DOM
             loadHistoryToDOM ( arrayAfterDelete);
         }
+
+        async function viewChatByID (buttonID) {
+            console.log (`viewChatByID() - view mode chatID [${buttonID}]`)
+            const response = await fetch (`${defaultURL}message/${buttonID}`);
+            // no need to refer to the response as its view mode only. Do it for "good practice"
+            const selectedChat = await response.json();
+            alert (`Chat Info for View: \n\n___ID:  ${selectedChat.id}\n___Inserted Time:  ${selectedChat.insertTime}` +
+                    `\n___User:   ${selectedChat.nickName} \n___Chat Text:  ${selectedChat.message}` );
+        }
+
+        async function editChatByID (buttonID) {
+            let newComment = prompt ('Enter your comment to the chat here:\n');
+            if (!newComment) {
+                console.log ('Edit chat by id : DO NOTHING (no input provided)');
+                return 
+            }
+
+            user = document.querySelector('#idNickName').value;
+            user = user? user : 'Anonymous'
+            newComment = `${user} commented on ${getTime ('SHORT')}: ${newComment}`; 
+
+            let commentStructure = { "id": buttonID, 
+                                     "comment": newComment};
+
+            console.log ('JSON.stringify (commentStructure): \n........'+JSON.stringify (commentStructure)) ;
+            
+            let updateResponse = await fetch (`${defaultURL}message/${buttonID}`,
+                {   method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    // I included the ID in the body. Not a must as it is in the /message/:buttonID
+                    body:   JSON.stringify (commentStructure)
+                }) // end fetch
+
+            const updateChatArray = await updateResponse.json();
+            loadHistoryToDOM (updateChatArray);
+        }   // END editChatByID
 
         async function getHistoryList() {
             if (debugMode) {console.log( 'getHistoryList() - before calling server')};
@@ -215,7 +257,7 @@
             let time = new Date();
             let timeInUIFormat = 
                 dateZeroPrefix (time.getDate().toString(), 2) + '-' +
-                getMonthName (time.getMonth(), monthNameFormat) + '-' + time.getFullYear() + '  ' +
+                getMonthName (time.getMonth(), monthNameFormat) + '-' + time.getFullYear() + ' ' +
                 dateZeroPrefix ( time.getHours().toString(), 2 ) + ":" + 
                 dateZeroPrefix ( time.getMinutes().toString(), 2)  + ":" + 
                 dateZeroPrefix ( time.getSeconds().toString(), 2 );
